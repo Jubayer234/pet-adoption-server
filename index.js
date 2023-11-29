@@ -28,7 +28,22 @@ async function run() {
     await client.connect();
 
 
+    const userCollection = client.db("PetDb").collection("users")
     const petCollection = client.db("PetDb").collection("pet")
+
+
+    // user api
+    app.post('/users', async(req,res) => {
+      const user =req.body;
+
+      const query = {email: user.email}
+      const existingUser = await userCollection.findOne(query);
+      if(existingUser){
+        return res.send({message: 'user exist' , insertedId : null})
+      }
+      const result = await userCollection.insertOne(user);
+      res.send(result);
+    })
 
     app.get('/pet', async(req,res) => {
         const result = await petCollection.find().toArray()
