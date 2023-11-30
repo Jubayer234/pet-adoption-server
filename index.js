@@ -1,6 +1,7 @@
 const express = require('express');
 const app = express();
 const cors = require('cors');
+var jwt = require('jsonwebtoken');
 require('dotenv').config();
 const port = process.env.PORT || 5000;
 
@@ -33,7 +34,37 @@ async function run() {
     const reqCollection = client.db("petBd").collection("petRequest")
 
 
+    // jwt api
+    app.post('/jwt', async (req, res) => {
+      const user = req.body;
+      const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' });
+      res.send({ token });
+    })
+
+    // verify
+    const tokenVerify = (req,res,next) => {
+      console.log('inside verify', req.headers.authorization);
+      if (!req.headers.authorization){
+        return res.status(401).send({ message: 'Access Unavailable' });
+      }
+      const token = req.headers.authorization.split(' ')[1];
+      jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+        if (err) {
+          return res.status(401).send({ message: 'unauthorized access' })
+        }
+        req.decoded = decoded;
+        next();
+      })
+    }
+
+
     // user api
+    app.get('/users',tokenVerify,  async(req,res) => {
+      const result = await userCollection.find().toArray();
+      res.send(result)
+    })
+
+
     app.post('/users', async(req,res) => {
       const user =req.body;
 
@@ -47,11 +78,24 @@ async function run() {
 
       
     })
+    // make admin
+    app.patch('/users/admin/:id', async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const updatedDoc = {
+        $set: {
+          role: 'admin'
+        }
+      }
+      const result = await userCollection.updateOne(filter, updatedDoc);
+      res.send(result);
+    })
 
     app.get('/pet', async(req,res) => {
         const result = await petCollection.find().toArray()
         res.send(result);
     })
+
 
     // pet Request
     app.get('/petRequest', async (req,res) => {
@@ -70,6 +114,24 @@ async function run() {
       const result = await reqCollection.insertOne(request);
       res.send(result);
     })
+
+  // update
+    app.patch('/petRequest/:id', async (req,res) => {
+      const id = req.params.id;
+      const filter = {_id: new ObjectId (id)}
+      const acceptReq = req.body;
+      console.log(acceptReq);
+      const updateDoc = {
+        $set: {
+          status: acceptReq.status
+        },
+      };
+
+      const result = await reqCollection.updateOne(filter, updateDoc);
+      res.send(result)
+
+    });
+
 
     // req delete
     app.delete('/petRequest/:id', async (req,res) => {
