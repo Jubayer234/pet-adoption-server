@@ -30,6 +30,7 @@ async function run() {
 
     const userCollection = client.db("PetDb").collection("users")
     const petCollection = client.db("PetDb").collection("pet")
+    const reqCollection = client.db("petBd").collection("petRequest")
 
 
     // user api
@@ -43,11 +44,31 @@ async function run() {
       }
       const result = await userCollection.insertOne(user);
       res.send(result);
+
+      
     })
 
     app.get('/pet', async(req,res) => {
         const result = await petCollection.find().toArray()
         res.send(result);
+    })
+
+    // pet Request
+    app.get('/petRequest', async (req,res) => {
+      console.log(req.query);
+      let query = {};
+      if(req.query?.email){
+        query = {email: req.query.email}
+      }
+      const result = await reqCollection.find(query).toArray();
+      res.send(result);
+    })
+
+    app.post('/petRequest', async (req,res) => {
+      const request = req.body;
+      console.log(request);
+      const result = await reqCollection.insertOne(request);
+      res.send(result);
     })
 
 
