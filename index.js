@@ -33,8 +33,6 @@ async function run() {
     const petCollection = client.db("PetDb").collection("pet")
     const addedPetsCollection = client.db("PetDb").collection("addedPets")
     const reqCollection = client.db("petBd").collection("petRequest")
-
-
     // jwt api
     app.post('/jwt', async (req, res) => {
       const user = req.body;
