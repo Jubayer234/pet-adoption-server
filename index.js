@@ -31,6 +31,7 @@ async function run() {
 
     const userCollection = client.db("PetDb").collection("users")
     const petCollection = client.db("PetDb").collection("pet")
+    const addedPetsCollection = client.db("PetDb").collection("addedPets")
     const reqCollection = client.db("petBd").collection("petRequest")
 
 
@@ -121,6 +122,11 @@ async function run() {
     app.get('/pet', async(req,res) => {
         const result = await petCollection.find().toArray()
         res.send(result);
+    })
+    app.post('/addedPets', async (req,res) => {
+      const pets = req.body;
+      const result = await addedPetsCollection.insertOne(pets);
+      res.send(result)
     })
 
 
